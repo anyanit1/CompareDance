@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, ImageEditor, Image, View } from 'react-native';
 import { Container, Form, Button, Label } from 'native-base';
-import { ImagePicker, Permissions } from 'expo';
+import { ImagePicker, Permissions, Video } from 'expo';
 
 export default class UploadOriginal extends React.Component {
   constructor(props){
@@ -12,48 +12,35 @@ export default class UploadOriginal extends React.Component {
   }
 
   pickImage = async () => {
-    let result = await Expo.ImagePicker.launchImageLibraryAsync({
-      //mediaTypes: 'video',
+    await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    const { cancelled, uri } = await ImagePicker.launchImageLibraryAsync({
+      aspect: 1,
       allowsEditing: true,
-      aspect: [4, 3],
+      mediaTypes: 'Videos'
     });
-
-    if (result.cancelled) {
-      console.log('got here');
-      return;
-    }
-
-    let resizedUri = await new Promise((resolve, reject) => {
-      ImageEditor.cropImage(result.uri,
-        {
-          offset: { x: 0, y: 0 },
-          size: { width: result.width, height: result.height },
-          displaySize: { width: 50, height: 50 },
-          resizeMode: 'contain',
-        },
-        (uri) => resolve(uri),
-        () => reject(),
-      );
-    });
-
-    this.setState({ image: resizedUri });
+    if (!cancelled) this.setState({ image: uri });
   }
-}
 
   render() {
     let { image } = this.state;
 
     return (
       <Container style={styles.container}>
+
+        <Form>
+          {image &&
+            <Video source={{ uri: image }}
+                  style={{ margin: 50, width: 300, height: 300}}
+                  //shouldPlay
+                  //isLooping
+                  useNativeControls/>}
+        </Form>
+
         <Button style={styles.buttons}
                 full
                 onPress={this.pickImage}>
-                <Label>Upload original dance routine</Label>
+                <Label style={{textAlign: 'center'}}>Upload original dance routine</Label>
         </Button>
-
-        <View>
-          {image && <Image source={{ uri: image }} style={{ width: 200, height: 200, resizeMode: 'contain'}}/>}
-        </View>
       </Container>
     );
   }
@@ -65,12 +52,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#778899',
+    backgroundColor: '#ffffff',
   },
 
   buttons: {
     alignSelf: 'center',
-    height: '50%',
-    width: '50%',
+    height: 200,
+    width: 200,
+    padding: 15,
+    marginBottom: 100
   },
 })
